@@ -1,0 +1,27 @@
+version: '3'
+
+services:
+  tor-http-proxy-rotator:
+    image: 'ariadata/tor-http-proxy-rotator'
+    container_name: ${COMPOSE_PROJECT_NAME}_tor-http-proxy-rotator
+    restart: unless-stopped
+    environment:
+      TOR_INSTANCES: '${TOR_INSTANCES:-5}'
+      TOR_REBUILD_INTERVAL: '${TOR_REBUILD_INTERVAL:-3600}'
+    ports:
+      - '${HTTP_PROXY_PORT:-3128}:3128'
+#      - '${MONITORING_PROXY_PORT:-4444}:4444'
+
+  cloud-torrent:
+    image: 'jpillora/cloud-torrent'
+    container_name: ${COMPOSE_PROJECT_NAME}_cloud_torrent
+    restart: unless-stopped
+    user: "${UID:-1000}:${GID:-1000}"
+    environment:
+      - http_proxy=http://tor-http-proxy-rotator:3128
+      - https_proxy=http://tor-http-proxy-rotator:3128
+    ports:
+      - '${CLOUD_TORRENT_GUI_PORT:-3000}:3000'
+    volumes:
+      - './downloads:/downloads'
+    
